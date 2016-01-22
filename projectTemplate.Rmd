@@ -1,0 +1,210 @@
+Redwine exploration by Thuy Quach
+========================================================
+
+
+## Abstract
+
+Why some red wines taste better than others? Just because the wine tasters say so or there is another way to tell. Can we tell what make great wine or bad wine from their chemical properties? And if yes, under what conditions the quality of red wines is the best. 
+
+This is what we are going to explore: relationship of chemical properties with wine quality. 
+
+The analysis included: data structure, statistical summary, distribution plots, boxplots of each variables vs. quality, correlation matrix and scatter plots, final plots and data exploring the strong correlated variables, and reflections.
+
+## Dataset
+
+The data set using in this analysis can be found here https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages=FALSE}
+# Load all of the packages for ploting and statistical analysis-------------
+library(ggplot2) 
+install.packages(c("psych","GPArotation","MASS"), 
+                 repos = 'http://cran.us.r-project.org')
+library(dplyr)
+library(data.table)
+library(reshape2)
+install.packages("gridExtra", repos = 'http://cran.us.r-project.org')
+library(gridExtra)
+install.packages("GGally", repos = 'http://cran.us.r-project.org')
+library(GGally)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+getwd()
+setwd('~/Documents/Data analysis R/')
+redwine <- read.csv(file = 'wineQualityReds.csv', sep = ",", header = TRUE) 
+```
+
+## Summary of the data
+
+First, let's see the total of the wine data is: 
+```{r echo=FALSE, Summary of dataset}
+length(redwine$quality)
+```
+. 
+
+Then, let's explore the all variables.
+```{r echo=FALSE, variables}
+names(redwine)
+```
+
+X is data entry number and quality is the output of the analysis. So, there were 11 total variables. The data is in wide format.
+
+How is about the structure of the data?
+
+```{r echo=FALSE, data structure}
+str(redwine)
+```
+
+Quality was measured as int between 0 (very bad) and 10 (very excellent). All other variables were numerical data. 
+
+Statiscal summary of the data was shown below.
+
+```{r echo=FALSE, summary of data}
+summary(redwine)
+```
+
+
+## Univariate Plots Section
+### Distribution of individual variables by histogram:
+
+First, let us explore the distributions of each variables using ggplot. 
+
+The data is in the format of wide data which make difficult for R to draw multiple variable plots. Therefore, I reshaped the data into long format.
+
+```{r long format}
+# reshape data into long format
+long_data <- melt(redwine, id.vars=c("X", "quality")) 
+```
+
+
+```{r distribution plot, echo=FALSE}
+# plot the distribution and density
+dist_plot <- ggplot(long_data, aes(x=value)) +  
+  geom_histogram(aes(y= ..density..), 
+                 binwidth=0.05, colour="green", fill="white") + 
+  geom_density(color = "red", alpha = 0.2)
+
+# iterate plot 
+dist_plot + facet_wrap(~ variable, scales = "free") 
+  
+```
+
+Some of the variables seem to follow normal distribution such as density, pH and fix.acidity while few others are right skewed distribution such as residual.sugar, free.sulfur.dioxide, total.sulfur.dioxide, sulphate, alcohol. 
+
+### What are the chemical properties that influence wine quality?
+
+Let us run the correlation matrix to see what chemcial properties have strong relationship with wine quality and also with each others using ggpairs. It difficult to plot ggpairs on all variables because the space allotted to the plot couldn't hold 12^2 variables, so I created three groups and made sure that the variable "quality" (col 13) is present in all.
+
+We learned that any correlation above 0.3 is meaningful and 0.7 is pretty strong. Let us see if we could find any in the below results.
+
+```{r correlation graphs 1}
+group1 <- ggpairs(redwine[c(13, 2:5)])
+group1
+```
+
+Correlation efficients between quality with volatile.acidity was -0.391, citric.acid with fixed.acidity was 0.672, citric.acid with volatile.acidity was -0.552.
+
+```{r correlation graphs 2}
+group2 <- ggpairs(redwine[c(13, 6:8)])
+group2
+```
+
+Correlation efficient between total.sulfur.dioxide and free.sulfur.dioxide was 0.668.
+
+```{r correlation graphs 2}
+group3 <- ggpairs(redwine[c(13, 9:12)])
+group3
+```
+
+Correlation efficient between quality and alcohol was 0.476, pH and density was -0.342.
+
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+### What is/are the main feature(s) of interest in your dataset?
+
+```{r quality ggpairs}
+group1 <- ggpairs(redwine[c(13, 2:7)])
+group1
+```
+
+```{r}
+group2 <- ggpairs(redwine[c(13, 8:12)])
+group2
+```
+
+Correlation matrix and reveal my uninvarite analysis and bivariate analysis. Choose the feature base con cor effs.
+
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+### Did you create any new variables from existing variables in the dataset?
+Rating
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+
+
+# Bivariate Plots Section
+```{r echo=FALSE, Bivariate_Plots}
+
+```
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+### What was the strongest relationship you found?
+
+
+
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+
+```
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+### Were there any interesting or surprising interactions between features?
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+
+```
+
+### Description One
+
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+```
+
+### Description Two
+
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+
+```
+
+### Description Three
+
+------
+
+# Reflection

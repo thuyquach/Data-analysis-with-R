@@ -1,0 +1,286 @@
+Title: Redwine data analysis
+Thuy Quach
+Dec, 2015
+
+========================================================
+
+This document is final submission for Explore and Summarize Data project, Udacity Data Analyst Nanodegree Program https://www.udacity.com/course/data-analyst-nanodegree--nd002.
+
+The data set using in this assignment was the redwine data. Descriptions about the data set can be found here https://s3.amazonaws.com/udacity-hosted-downloads/ud651/wineQualityInfo.txt.
+
+The analysis included: data structure, statistical summary, distribution plots, boxplots of each variables vs. quality, correlation matrix and scatter plots, final plots and data exploring the strong correlated variables, and reflections.
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+echo=FALSE, warning=FALSE, message=FALSE)
+
+```
+
+### Load the packages:
+
+```{r message=FALSE}
+# Load all of the packages for ploting and statistical analysis-------------
+library(ggplot2) 
+install.packages(c("psych","GPArotation","MASS"), repos = 'http://cran.us.r-project.org')
+library(dplyr)
+library(data.table)
+library(reshape2)
+install.packages("gridExtra", repos = 'http://cran.us.r-project.org')
+library(gridExtra)
+```
+
+
+##1.Analysis:
+
+###1.1 Load the Data:
+
+```{r Load_the_Data}
+getwd()
+setwd('~/Documents/Data analysis R/')
+redwine <- read.csv(file = 'wineQualityReds.csv', sep = ",", header = TRUE) 
+```
+
+###1.2 Summary of the Data Set:
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Observations and variables----------
+dim(redwine)
+
+#List of the variables-----------
+names(redwine)
+
+#Structure of the data-----------
+str(redwine)
+
+#Statistical summary of the data-------------
+summary(redwine)
+```
+
+
+### Observations from the Data:
+
+Data structures:
+
+The data had 1599 observations of wine quality with 13 variables. All variables, except wine quality, are numberical. The quality (1 is worst, 10 is best) is ordered factor variable.
+
+Statistical observations:
+
+- Most the wine was ranked 5, 6 or 7 for quality. There was only small proportion in 3,4 or 8 categories. There was none in 1, 2 or 10. 
+
+
+### Questions from the data
+
+1. Which chemical properties influence the quality of red wines?
+
+2. Under what conditions the quality of red wines is the best?
+
+
+###1.3 Distribution of individual variables by histogram:
+
+First, let us explore the distributions of each variables using ggplot. 
+
+The data is in the format of wide data which make difficult for R to draw multiple variable plots. Therefore, I reshaped the data into long format.
+
+```{r}
+# reshape data into long format
+long_data <- melt(redwine, id.vars=c("X", "quality")) 
+```
+
+
+```{r warning=FALSE}
+# plot the distribution and density
+dist_plot <- ggplot(long_data, aes(x=value)) +  geom_histogram(aes(y= ..density..), binwidth=0.05, colour="green", fill="white") + geom_density(color = "red", alpha = 0.2)
+
+ # iterate plot 
+dist_plot + facet_wrap(~ variable, scales = "free") 
+  
+```
+
+Some of the variables seem to follow normal distribution such as density, pH and fix.acidity while few others are right skewed distribution such as residual.sugar, free.sulfur.dioxide, total.sulfur.dioxide, sulphate, alcohol. 
+
+### 1.4 Correlation of chemical properties vs. wine quality by boxplot:
+
+```{r}
+# correlation boxplot and iterate by variables
+box_plot <- ggplot(long_data, aes(x = quality, y = value)) +
+  facet_wrap(~ variable, scales="free_y")
+
+ # groupby quality
+box_plot + geom_boxplot(aes_string(group = 'quality'))
+
+```
+
+
+From the boxplots, we could see that all variables had many outliers, except alcohol, citric.acid and volatile.acidity. We also see that alcohol, sulphates, volatile.acidity and citric.acid might have impacts on the quality of wines. Let us calculate correlation coefficients to quantifiy the impacts.
+
+### 1.5 Correlation matrix:
+
+As the variables were physicochemical properties of wine, they could be highly correlated with each others. Let us explore their relationships.
+
+
+```{r Correlations matrix}
+# calculate the correlation coefficients matrix
+var_redwine_variables = cor(x=redwine[,2:13], y=redwine$rating)
+var_redwine_variables
+```
+
+We could see that citrid.acid, fixed.acidity, pH and density have strongly correlated with each others (see their correlation coefficients were higher than 0.6).  Free.sulfur.dioxide and total.sulfur.dioxide were also strongly correlated. It could also be shown in below figure of Scatterplot of Chemical Properties.
+
+```{r}
+# scatterplot
+pairs(redwine[,2:12], gap=0, pch=19, cex=0.4, col="darkblue") + title(sub="Scatterplot of Chemical Properties", cex=0.8)
+```
+
+#### Correlation coefficients of variables vs. quality:
+
+```{r warning=FALSE}
+# correlation coefficients with quality
+var_redwine_quality = cor(x=redwine[,2:12], y=redwine$quality)
+var_redwine_quality
+```
+
+From the var_redwine table we could also see that alcohol, volatile.acidity, sulphates and citric.acid had high impacts on quality with the correlation coefficients of 0.48, -0.39, 0.25 and 0.23 respectively. 
+
+
+```{r Correlation graph}
+# create a dataframe with correlation coefficients results--------
+var = c(names(redwine)[2:12])
+cor_coef = c(var_redwine_quality[1:11])
+df = data.frame(var,cor_coef)
+
+# correlation graph------------
+cor_plot <- ggplot(df, aes(x = var, y = cor_coef))
+cor_plot + geom_bar(stat = "identity", color = "blue", fill = "blue") + ylim(-0.5, 0.5) + coord_flip() # flip the axis for easier comparation
+```
+
+From the correlation coefficients graph, we could see that alcohol, sulphates, citric.acid, fixed.acidity had positive correlations with wine quality while volatile.acidity, total.sulfur.dioxide, density and chlorides had negative correlations with wine quality.
+
+Alcohol, volatile.acidity, sulphates and citric.acid had highest impacts wine quality with the correlation coefficients of 0.48, -0.39, 0.25 and 0.23 respectively. 
+
+In order to see clear impacts of the chemical properties, I add new variable to group wine into 3 categories.
+
+
+###1.6  Add a new variable 'rating':
+
+Creat a new variable 'rating' which was factored to 'bad' if 'quality' was less than or equal 4, 'good' if 'quality' was in range from 5-6, and 'very good' if 'qualiy' was greater or equal 7.
+
+
+```{r New rating variable}
+# turn data in to data.table
+wine_table <- data.table(redwine)
+
+# add new rating variable
+wine_table[, rating := ifelse(quality <=4, "bad",
+                       ifelse(quality >=5 & quality <=6, "good",
+                       ifelse(quality >=7, "very good", NA)))]
+```
+
+#### Summary of wine by rating:
+
+```{r Summary of wine by rating} 
+# group and then summarize the data
+wine_table %>%
+  group_by(rating) %>% 
+  summarize(n_obs =n())
+```
+
+There were 217 very good wines, 1319 good wines and 63 bad wines.
+
+
+##3. Final plots:
+
+###3.1 Effects of alcohol, volatie.acidity, sulphates and citric.acid on quality:
+
+From statisical summary, boxplots and correlation matrix, we have learned that four variables alcohol, volatile.acidity, sulphates and citric.acid had impacts on quality. To make a clearer visualization of the impacts, I choosed the point plot combined with line plot to see how average value of the variables impacts on wine quality. Since the alcohol had much larger value (10 or higher) than other variables (less than 1), I separated them into two plots.
+
+
+```{r Selected variables  vs quality}
+quality_vs_total_variables <- redwine %>%
+  group_by(quality) %>%
+  summarize(avg_alcohol = mean(alcohol),avg_citric.acid = mean(citric.acid), avg_sulphates = mean(sulphates), avg_volatile.acidity = mean(volatile.acidity)) %>%
+  arrange(avg_alcohol, avg_volatile.acidity, avg_citric.acid, avg_sulphates)
+
+quality_vs_total_variables
+```
+
+Reshape the data into long format exclude alcohol.
+```{r Long format}
+long_redwine <- melt(subset(quality_vs_total_variables, select = -c(avg_alcohol)), id.vars=c("quality")) # exclude avg_alcohol due to its much higher value
+```
+
+
+```{r Plot quality vs selected varibles}
+
+plot1 = ggplot(long_redwine, aes(quality, value, colour = variable)) + 
+  geom_point(aes(size = value)) + geom_line() + theme(legend.position = "top")
+
+plot2 = ggplot(quality_vs_total_variables, aes(quality, avg_alcohol)) + geom_point(aes(size = avg_alcohol)) + geom_line() + theme(legend.position = "top")
+
+grid.arrange(plot1, plot2, ncol = 2, top="The chemical properties influence red wine quality")
+
+```
+
+From the above graph, we could see that with average volatile.acidity decreased, the wine quality increased respectively. While with the average sulphates, citric.acid and alcohol increased, the wine quality generally increased. We also can see that with just a small amount (0.1 g/dm^3 or less) of citric.acid and sulphated could significant increased wine quality by one level. Interestingly, with the very small changed around 0.02 g/dm^3 of citric.acid and sulphated could increased wine quality from 7-8. The chemical properties could be critical for wine with high quality. 
+
+
+###3.2 Effects of alcohol, volatie.acidity, sulphates and citric.acid on rating:
+
+From the previous analysis with boxplots and correlation matrix, we found that alcohol, volatile.acidity, sulphates and citric.acid had higher correlation coefficients with wine quality. Let explore the average of the chemical properties on wine rating.
+
+```{r Selected variables  vs ranking}
+rating_vs_variables <- wine_table %>%
+  group_by(rating) %>%
+  # add average of selected variables
+  summarize(avg_alcohol = mean(alcohol), avg_volatile.acidity = mean(volatile.acidity), avg_sulphates = mean(sulphates), avg_citric.acid = mean(citric.acid)) %>%
+  arrange(avg_alcohol, avg_volatile.acidity, avg_citric.acid, avg_sulphates)
+
+rating_vs_variables
+```
+
+We could see that the table that the higher concentrations of alcohol, citric.acid, sulphates are the higer wine rating is; the lower concentration of volatile.acidity is, the higher the wine rating is. Let combine the findings with the correlation coeffcients to see if they were consistant with each others.
+
+
+```{r}
+# Effects of selected variables graph
+p11 = ggplot(melt(rating_vs_variables, id.vars=c("rating")), aes(rating, value, fill = variable, order = variable)) + geom_bar(position = "stack", stat = "identity") + coord_flip() + theme(legend.position = "top")
+
+
+```
+```
+
+
+```{r warning=FALSE} 
+# correlation coefficient graph
+selected  <- c("alcohol", "volatile.acidity", "sulphates", "citric.acid")
+p9 =  ggplot(data = df[df$var %in% selected,], aes(x = var, y = cor_coef, fill = var)) + geom_bar(stat = "identity") + ylim(-0.5, 0.5) + coord_flip() + theme(legend.position = "top")
+
+# combine two plots
+grid.arrange(p11, p9, ncol = 2, top = "Chemical properties and their correlation with wine quality")
+
+```
+
+The combined graph clearly showed that the higher alcohol, citric.acid, sulphates were the higer wine rating was ; the lower concentration of volatile.acidity was, the higher the wine rating was. The results were consisted with the correlation coefficients graph where correlation coefficients of alcohol, citric.acid and sulphates were positive while volatile.acid was negative. 
+
+## Reflections:
+
+- The data has 11 chemical properties. In order to investigate all the variables, it could take some much time plotting invidual graphs. Therefore, I researched on R library and also R blogger to learn to code in R. First, I iterated the histograms and boxplots by writing a function that iterate all the variable names. It was succeed but still was too slow and complicated. Then, I read the paper "Tidy data" by Hadley Wickham. It changed everything. I reshaped the data into long format and applied facet_wrap function to iterate the varibles with the histograms and boxplots. It was fast and effective.
+
+- When I tried to use line plot to investigate the relationships of chemical properties and quality of wine, it was very hard to see since the data were spread out. However, when I use the box plot the trends of the data were much clearer. 
+
+- All chemical properties had outliers and widely spreadout made boxplots not easy to see. Therefore, I used the average value and it was easier to identify which chemical properties may influence on the wine quality.
+
+- With the average value of variables, I could plot the relationship of the variables vs. quality. However, when alcohol concentration went down the wine quality went up from 4-5 which was not consistent with positive correlation coefficient of alcohol with wine quality. So, I group the wine quality into three group and add a new variable "rating". The graph told better and clearer story.
+
+- In working with final plot, I have found which variables influence wine quality but I wanted to present it in clear way. I tried different plots and their combination. Finally, I came up with combine the correlation coefficients graphs and the relationship of selected variable with wine rating. It was a good summary plot since it told what I want to summarize: alcohol, citric.acid, sulphates and volatile.acidity influence wine quality. 
+
+- From the overall summary and findings of the analysis, I recommend further study would using alcohol, citric.acid, sulphates and volatile.acidity to build a linear regression using those varialbe as inputs to predict red wine quality. 
+
+- Also, I understand that it seems hard to predict the quality of the wine base on physicochemical properties. As all kind of food and drink, its organic chemical properties are very important. Also, I found citrid.acid, fixed.acidity, pH and density have strongly correlated with each others (see their correlation coefficients were higher than 0.6).  Free.sulfur.dioxide and total.sulfur.dioxide were also strongly correlated. Therefore, I recommend further studies should pay attention to those variables. 
+
+
+
+
+
+
+
