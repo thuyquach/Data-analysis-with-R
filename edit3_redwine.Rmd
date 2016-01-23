@@ -93,7 +93,7 @@ long_data <- melt(redwine, id.vars=c("X", "quality"))
 dist_plot <- ggplot(long_data, aes(x=value)) +  
   geom_histogram(aes(y= ..density..), 
                  binwidth=0.05, colour="green", fill="white") + 
-  geom_density(color = "red", alpha = 0.2)
+  geom_density(color = "red", alpha = 0.5)
 
 # iterate plot 
 dist_plot + facet_wrap(~ variable, scales = "free") 
@@ -105,7 +105,9 @@ Some of the variables seem to follow normal distribution such as density, pH, al
 #### Quality
 
 ```{r quality distribution, echo=FALSE}
-ggplot(redwine, aes(x = quality)) + geom_density()
+ggplot(data = NULL, aes(x = quality)) + 
+  geom_histogram(data = redwine, color = 'green', fill = 'green') +
+  stat_summary(fun.y = "median", colour = "red", size = 2)
 ```
 
 Most of the wine samples had wine quality of 5 and 6. Let's get the real number. 
@@ -153,8 +155,9 @@ From previous data correlations analysis, we found that there were some chemical
 #### Citric.acid and fixed.acidity
 
 ```{r citric.acid and fixed.acidity, echo=FALSE}
-ggplot(redwine, aes(x = citric.acid, y = fixed.acidity)) + geom_point() +
-  geom_smooth(method=lm)
+ggplot(redwine, aes(x = citric.acid, y = fixed.acidity)) + 
+  geom_point(alpha = 0.3)+
+  geom_smooth(method=lm,formula=y~x)
 ```
 
 Statistic summary of citric.acid
@@ -255,7 +258,8 @@ Let's zoom the plots of these chemical properties up.
 ```{r boxplot alcohol, echo=FALSE}
 # correlation boxplot and iterate by variables
 box_plot <- ggplot(redwine, aes(x = quality, y = alcohol)) + 
-  geom_boxplot(aes_string(group = 'quality')) + scale_x_continuous(breaks=1:9)
+  geom_boxplot(aes_string(group = 'quality')) + 
+  scale_x_continuous(breaks=1:9)
 
 box_plot
 
@@ -375,7 +379,8 @@ As the wine quality increase from 3 to 8, there was an decrease in volatile.acid
 Let's compare the distributions of volatile.acidity for different wine qualities
 
 ```{r volatile.acidity distribution, echo=FALSE }
-ggplot(redwine, aes(x= volatile.acidity, fill= as.factor(quality))) + geom_density(alpha=.3)
+ggplot(redwine, aes(x= volatile.acidity, fill= as.factor(quality))) +
+  geom_density(alpha = 0.3)
 ```
 
 We could see the distributions of volatile.acidity were similar and the mean of volatile.acidity shifted to the right with wine quality increased. 

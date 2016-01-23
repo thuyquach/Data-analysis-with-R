@@ -1,0 +1,148 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r Volatile.acidity and total.sulfur.dioxide, echo=FALSE}
+# Use all data
+p13 = ggplot(redwine, 
+             aes(volatile.acidity, total.sulfur.dioxide, 
+                 color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data 
+p14 = ggplot(quality_vs_total_variables, 
+             aes(avg_volatile.acidity, avg_total.sulfur.dioxide, 
+                 color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data grouped by rating
+p15 = ggplot(rating_vs_total_variables, 
+             aes(avg_volatile.acidity, avg_total.sulfur.dioxide, 
+                 color = as.factor(rating))) +
+  geom_point() + theme(legend.position = "top")
+
+grid.arrange(p13, p14, p15, ncol=3, 
+             bottom = "Relation of volatile.acidity and total.sulfur.dioxide with quality")
+```
+
+```{r total.sulfur.dioxide and volatile acid sum, echo=FALSE}
+dd <- quality_vs_total_variables[c("avg_total.sulfur.dioxide",
+                                   "avg_volatile.acidity", "quality")]
+dd[order(-dd[3]),]
+```
+
+```{r alcohol and sulphates and quality, echo=FALSE}
+# Use all data
+p10 = ggplot(redwine, 
+             aes(alcohol, sulphates, color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data 
+p11 = ggplot(quality_vs_total_variables, 
+             aes(avg_alcohol, avg_sulphates, color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data grouped by rating
+p12 = ggplot(rating_vs_total_variables, 
+             aes(avg_alcohol, avg_sulphates, color = as.factor(rating))) +
+  geom_point() + theme(legend.position = "top")
+
+grid.arrange(p10, p11, p12, ncol=3, 
+             bottom = "Relation of alcohol and sulphates with quality")
+```
+
+```{r pH and density vs. quality, echo=FALSE}
+# Use all data
+p7 = ggplot(redwine, aes(pH, density, color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data 
+p8 = ggplot(quality_vs_total_variables, 
+            aes(avg_pH, avg_density, color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data grouped by rating
+p9 = ggplot(rating_vs_total_variables, 
+            aes(avg_pH, avg_density, color = as.factor(rating))) +
+  geom_point() + theme(legend.position = "top")
+
+grid.arrange(p7, p8, p9, ncol=3, 
+             bottom = "Relation of pH and density with quality")
+```
+
+```{r Total.sulfur.dioxide and free.sulfur.dioxide, echo=FALSE}
+# Use all the data
+p4= ggplot(redwine, 
+           aes(x = total.sulfur.dioxide, y = free.sulfur.dioxide, 
+               color = as.factor(quality))) +
+  geom_point()+ theme(legend.position = "top")
+
+# Use average data
+p5= ggplot(quality_vs_total_variables, 
+           aes(x = avg_total.sulfur.dioxide, y = avg_free.sulfur.dioxide, 
+               color = as.factor(quality))) +
+  geom_point() + theme(legend.position = "top")
+
+# Use average data grouped by rating
+p6= ggplot(rating_vs_total_variables, 
+           aes(x = avg_total.sulfur.dioxide, y = avg_free.sulfur.dioxide, 
+               color = as.factor(rating))) +
+  geom_point() + theme(legend.position = "top")
+
+grid.arrange(p4, p5, p6, ncol=3, 
+             bottom = "Relation of total.sulfur.dioxide and free.sulfur.dioxide with quality")
+```
+
+```{r citric.acid and fixed.acidity vs quality, echo=FALSE}
+# Use all the data
+p1 = ggplot(redwine, aes(x = citric.acid, y = fixed.acidity, 
+                    color= as.factor(quality))) + 
+  geom_point() + theme(legend.position = "top")
+
+# Use average data
+p2= ggplot(quality_vs_total_variables, 
+           aes(x = avg_citric.acid, y = avg_fixed.acidity, 
+               color= as.factor(quality))) + 
+  geom_point() + theme(legend.position = "top")
+
+# Use average data grouped by rating
+p3= ggplot(rating_vs_total_variables, 
+           aes(x = avg_citric.acid, y = avg_fixed.acidity, 
+               color= as.factor(rating))) + 
+  geom_point() + theme(legend.position = "top")
+
+grid.arrange(p1, p2, p3, ncol=3, 
+             bottom = "Relation of fixed.acidity and citric.acid with quality")
+```
+
+```{r acid, echo=FALSE}
+dd <- quality_vs_total_variables[c("avg_fixed.acidity", "avg_citric.acid",
+                                   "quality")]
+dd[order(-dd[3]),]
+```
